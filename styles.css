@@ -189,11 +189,15 @@ footer {
     background: #1f1f1f; /* Corner color */
 }
 
-/* Hide scroll bar on mobile devices */
+/* Hide scroll bar on mobile devices but allow scrolling */
 @media (max-width: 768px) {
     html, body {
-        overflow: hidden;
+        overflow-y: scroll; /* Enable vertical scrolling */
         -webkit-overflow-scrolling: touch; /* For smooth scrolling on iOS */
+    }
+
+    ::-webkit-scrollbar {
+        display: none; /* Hide the scrollbar */
     }
 
     .hero-section h1 {
