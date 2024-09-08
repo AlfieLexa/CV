@@ -172,25 +172,30 @@ footer {
 }
 
 ::-webkit-scrollbar-track {
-    background: #1f1f1f; /* Warna track scroll */
+    background: #1f1f1f; /* Scroll track color */
 }
 
 ::-webkit-scrollbar-thumb {
-    background: linear-gradient(145deg, #6a0dad, #9b59b6); /* Warna ungu */
+    background: linear-gradient(145deg, #6a0dad, #9b59b6); /* Purple color */
     border-radius: 10px;
-    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5); /* Efek bayangan untuk kesan 3D */
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5); /* 3D effect */
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #8e44ad; /* Warna lebih terang saat di-hover */
+    background: #8e44ad; /* Lighter color on hover */
 }
 
 ::-webkit-scrollbar-corner {
-    background: #1f1f1f; /* Warna di sudut */
+    background: #1f1f1f; /* Corner color */
 }
 
-/* Responsive design */
+/* Hide scroll bar on mobile devices */
 @media (max-width: 768px) {
+    html, body {
+        overflow: hidden;
+        -webkit-overflow-scrolling: touch; /* For smooth scrolling on iOS */
+    }
+
     .hero-section h1 {
         font-size: 2.5em;
     }
