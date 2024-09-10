@@ -77,9 +77,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Event listener untuk mendeteksi perubahan visibilitas (keluar dari fokus/tab lain)
 document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'hidden') {
-        // Layar berubah menjadi hitam saat visibilitas berubah
+        // Ubah layar menjadi hitam saat pengguna meninggalkan halaman
+        document.body.style.backgroundColor = 'black';
+        document.body.style.color = 'black';
+    } else {
+        // Kembalikan tampilan normal saat pengguna kembali ke halaman
+        document.body.style.backgroundColor = '';
+        document.body.style.color = '';
+    }
+});
+
+// Event listener untuk mendeteksi kehilangan fokus di PC dan laptop (misal: Alt+Tab)
+window.addEventListener('blur', function() {
+    document.body.style.backgroundColor = 'black';
+    document.body.style.color = 'black';
+});
+
+// Event listener untuk mengembalikan tampilan saat pengguna kembali ke halaman
+window.addEventListener('focus', function() {
+    document.body.style.backgroundColor = '';
+    document.body.style.color = '';
+});
+
+// Disable screenshot pada mobile dengan mendeteksi gesture multitasking (khusus mobile)
+window.addEventListener('resize', function() {
+    if (window.outerHeight - window.innerHeight > 100 || window.outerWidth - window.innerWidth > 100) {
+        // Ketika layar di-resize secara drastis (misal: gesture untuk multitasking)
         document.body.style.backgroundColor = 'black';
         document.body.style.color = 'black';
     }
