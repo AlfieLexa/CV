@@ -19,6 +19,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+    let alertShown = false; // Flag to check if alert was already shown
+
+    // Function to handle sensitive content hiding and tab closing
+    function hideSensitiveContent() {
+        if (!alertShown) {
+            document.body.style.filter = "blur(10px)"; // Blur the content
+            alert('Screenshot attempt or suspicious activity detected! The window will now close.');
+            alertShown = true; // Set the flag to prevent further alerts
+            setTimeout(() => window.close(), 1000); // Close the window after a delay
+        }
+    }
+
     // Disable right-click
     document.addEventListener('contextmenu', event => event.preventDefault());
 
@@ -40,33 +52,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // Block window resize to prevent undocking DevTools
     window.addEventListener('resize', function() {
         if (window.outerWidth - window.innerWidth > 200 || window.outerHeight - window.innerHeight > 200) {
-            window.close();
+            hideSensitiveContent();
         }
     });
 
-    // Prevent user from taking screenshots (mitigation, not 100% foolproof)
-    function hideSensitiveContent() {
-        document.body.style.filter = "blur(10px)"; // Blur content
-        alert('Screenshot attempt detected! The window will now close.');
-        setTimeout(() => window.close(), 1000); // Close the window after a delay
-    }
-
-    // Listen for fullscreen changes as an indicator of possible screenshot attempt
+    // Detect fullscreen changes as a possible screenshot attempt
     document.addEventListener('fullscreenchange', function() {
         if (!document.fullscreenElement) {
             hideSensitiveContent();
         }
     });
 
-    // Listen for when the user switches tabs or windows
+    // Detect if user switches tabs or windows
     window.addEventListener('blur', function() {
-        // Blur the content or hide it when the user leaves the tab
-        document.body.style.opacity = 0;
+        document.body.style.opacity = 0; // Hide content
     });
 
-    // Restore the page content when the user comes back to the tab
     window.addEventListener('focus', function() {
-        document.body.style.opacity = 1;
+        document.body.style.opacity = 1; // Show content again
     });
 
     // Detect DevTools opening with more advanced method
@@ -74,8 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let element = new Image();
         Object.defineProperty(element, 'id', {
             get: function() {
-                alert('DevTools is opened. Please close it.');
-                window.close();
+                hideSensitiveContent(); // Hide content and close if DevTools is opened
             }
         });
 
@@ -88,11 +90,10 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         detectDevTools();
     } catch (err) {
-        alert('DevTools detected. Closing window.');
-        window.close();
+        hideSensitiveContent();
     }
 
-    // Detect window resizing as potential sign of dev tools being opened
+    // Monitor window resizing for signs of dev tools being opened
     setInterval(() => {
         if (window.outerWidth !== screen.width || window.outerHeight !== screen.height) {
             hideSensitiveContent();
