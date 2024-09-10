@@ -44,23 +44,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Prevent screen capturing using the HTML5 Fullscreen API (mitigates some screen capture tools)
-    document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState === 'hidden') {
-            alert('Screen capture attempt detected! The window will now close.');
-            window.close();
+    // Prevent user from taking screenshots (mitigation, not 100% foolproof)
+    function hideSensitiveContent() {
+        document.body.style.filter = "blur(10px)"; // Blur content
+        alert('Screenshot attempt detected! The window will now close.');
+        setTimeout(() => window.close(), 1000); // Close the window after a delay
+    }
+
+    // Listen for fullscreen changes as an indicator of possible screenshot attempt
+    document.addEventListener('fullscreenchange', function() {
+        if (!document.fullscreenElement) {
+            hideSensitiveContent();
         }
     });
 
-    // Prevent certain screen capturing methods (mostly mitigates but doesn't prevent entirely)
-    setInterval(() => {
-        if (window.outerWidth !== screen.width || window.outerHeight !== screen.height) {
-            alert('Suspicious activity detected! Closing window to prevent screenshot.');
-            window.close();
-        }
-    }, 1000);
+    // Listen for when the user switches tabs or windows
+    window.addEventListener('blur', function() {
+        // Blur the content or hide it when the user leaves the tab
+        document.body.style.opacity = 0;
+    });
 
-    // Warn user if DevTools is opened
+    // Restore the page content when the user comes back to the tab
+    window.addEventListener('focus', function() {
+        document.body.style.opacity = 1;
+    });
+
+    // Detect DevTools opening with more advanced method
     const detectDevTools = function() {
         let element = new Image();
         Object.defineProperty(element, 'id', {
@@ -83,14 +92,10 @@ document.addEventListener('DOMContentLoaded', () => {
         window.close();
     }
 
-    // Attempt to disable screen recording by breaking visibility on sensitive areas
-    const hideSensitiveContent = () => {
-        document.body.style.opacity = 0;
-        alert('Attempt to take a screenshot detected. Content is hidden.');
-    };
-
-    window.addEventListener('blur', hideSensitiveContent);  // Triggers when the window loses focus
-    window.addEventListener('focus', () => {
-        document.body.style.opacity = 1;  // Restore visibility when the window regains focus
-    });
+    // Detect window resizing as potential sign of dev tools being opened
+    setInterval(() => {
+        if (window.outerWidth !== screen.width || window.outerHeight !== screen.height) {
+            hideSensitiveContent();
+        }
+    }, 1000);
 });
