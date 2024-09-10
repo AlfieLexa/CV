@@ -76,3 +76,11 @@ document.addEventListener('DOMContentLoaded', () => {
         window.close();
     }
 });
+
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'hidden') {
+        // Layar berubah menjadi hitam saat visibilitas berubah
+        document.body.style.backgroundColor = 'black';
+        document.body.style.color = 'black';
+    }
+});
