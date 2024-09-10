@@ -31,72 +31,63 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Disable right-click
-    document.addEventListener('contextmenu', event => event.preventDefault());
-
-    // Disable common developer tools shortcuts (F12, Ctrl+Shift+I, etc.)
-    document.onkeydown = function(e) {
-        if (
-            e.keyCode == 123 ||  // F12
-            (e.ctrlKey && e.shiftKey && e.keyCode == 73) ||  // Ctrl+Shift+I
-            (e.ctrlKey && e.shiftKey && e.keyCode == 74) ||  // Ctrl+Shift+J
-            (e.ctrlKey && e.keyCode == 85) ||  // Ctrl+U
-            (e.ctrlKey && e.keyCode == 83) ||  // Ctrl+S
-            (e.ctrlKey && e.shiftKey && e.keyCode == 67)  // Ctrl+Shift+C
-        ) {
-            e.preventDefault();
-            return false;
-        }
-    };
-
-    // Block window resize to prevent undocking DevTools
-    window.addEventListener('resize', function() {
-        if (window.outerWidth - window.innerWidth > 200 || window.outerHeight - window.innerHeight > 200) {
-            hideSensitiveContent();
-        }
-    });
-
-    // Detect fullscreen changes as a possible screenshot attempt
-    document.addEventListener('fullscreenchange', function() {
-        if (!document.fullscreenElement) {
-            hideSensitiveContent();
-        }
-    });
-
-    // Detect if user switches tabs or windows
-    window.addEventListener('blur', function() {
-        document.body.style.opacity = 0; // Hide content
-    });
-
-    window.addEventListener('focus', function() {
-        document.body.style.opacity = 1; // Show content again
-    });
-
-    // Detect DevTools opening with more advanced method
-    const detectDevTools = function() {
-        let element = new Image();
-        Object.defineProperty(element, 'id', {
-            get: function() {
-                hideSensitiveContent(); // Hide content and close if DevTools is opened
+    // Detect interactions that might indicate a screenshot attempt
+    function detectScreenshotAttempt() {
+        // Detect fullscreen change, since screenshots often involve fullscreen
+        document.addEventListener('fullscreenchange', function() {
+            if (!document.fullscreenElement && !alertShown) {
+                hideSensitiveContent();
             }
         });
 
-        setInterval(function() {
-            console.profile();
-            console.profileEnd();
-        }, 1000);
-    };
+        // Detect window resizing, another common behavior during screenshotting
+        window.addEventListener('resize', function() {
+            if (window.outerWidth - window.innerWidth > 200 || window.outerHeight - window.innerHeight > 200) {
+                hideSensitiveContent();
+            }
+        });
 
-    try {
-        detectDevTools();
-    } catch (err) {
-        hideSensitiveContent();
-    }
+        // Detect when the user switches to a different tab or minimizes the window
+        window.addEventListener('blur', function() {
+            document.body.style.opacity = 0; // Hide content
+        });
 
-    // Monitor window resizing for signs of dev tools being opened
-    setInterval(() => {
-        if (window.outerWidth !== screen.width || window.outerHeight !== screen.height) {
+        window.addEventListener('focus', function() {
+            document.body.style.opacity = 1; // Restore content
+        });
+
+        // Monitor for DevTools usage, which can indicate an attempt to inspect the page
+        const detectDevTools = function() {
+            let element = new Image();
+            Object.defineProperty(element, 'id', {
+                get: function() {
+                    hideSensitiveContent(); // Hide content and close if DevTools is opened
+                }
+            });
+
+            setInterval(function() {
+                console.profile();
+                console.profileEnd();
+            }, 1000);
+        };
+
+        try {
+            detectDevTools();
+        } catch (err) {
             hideSensitiveContent();
         }
-    }, 1000);
+
+        // Monitor for window resizing for signs of DevTools or screenshot attempts
+        setInterval(() => {
+            if (window.outerWidth !== screen.width || window.outerHeight !== screen.height) {
+                hideSensitiveContent();
+            }
+        }, 1000);
+    }
+
+    // Call the function only when there is an actual interaction related to screenshots
+    window.addEventListener('keydown', detectScreenshotAttempt); // Trigger detection on keypress (e.g., for screenshot shortcuts)
+    window.addEventListener('mousemove', detectScreenshotAttempt); // Trigger detection when there's interaction
+    window.addEventListener('mousedown', detectScreenshotAttempt); // Trigger detection on mouse click
+    window.addEventListener('touchstart', detectScreenshotAttempt); // Trigger on touch devices
 });
