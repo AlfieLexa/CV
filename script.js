@@ -19,75 +19,60 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    let alertShown = false; // Flag to check if alert was already shown
+    // Disable right-click
+    document.addEventListener('contextmenu', event => event.preventDefault());
 
-    // Function to handle sensitive content hiding and tab closing
-    function hideSensitiveContent() {
-        if (!alertShown) {
-            document.body.style.filter = "blur(10px)"; // Blur the content
-            alert('Screenshot attempt or suspicious activity detected! The window will now close.');
-            alertShown = true; // Set the flag to prevent further alerts
-            setTimeout(() => window.close(), 1000); // Close the window after a delay
+    // Disable keyboard shortcuts for Inspect Element and other dev tools
+    document.onkeydown = function(e) {
+        // Disable F12, Ctrl+Shift+I, Ctrl+Shift+C, Ctrl+Shift+J, Ctrl+U, Ctrl+S
+        if (
+            e.keyCode == 123 ||  // F12
+            (e.ctrlKey && e.shiftKey && e.keyCode == 73) ||  // Ctrl+Shift+I
+            (e.ctrlKey && e.shiftKey && e.keyCode == 74) ||  // Ctrl+Shift+J
+            (e.ctrlKey && e.keyCode == 85) ||  // Ctrl+U
+            (e.ctrlKey && e.keyCode == 83) ||  // Ctrl+S
+            (e.ctrlKey && e.shiftKey && e.keyCode == 67)  // Ctrl+Shift+C
+        ) {
+            e.preventDefault();
+            return false;
         }
-    }
+    };
 
-    // Detect interactions that might indicate a screenshot attempt
-    function detectScreenshotAttempt() {
-        // Detect fullscreen change, since screenshots often involve fullscreen
-        document.addEventListener('fullscreenchange', function() {
-            if (!document.fullscreenElement && !alertShown) {
-                hideSensitiveContent();
+    // Disable the ability to open the context menu via holding right-click
+    window.oncontextmenu = function(event) {
+        event.preventDefault();
+        return false;
+    };
+
+    // Block resizing the window to prevent undocking of DevTools
+    window.addEventListener('resize', function() {
+        if (window.outerWidth - window.innerWidth > 200 || window.outerHeight - window.innerHeight > 200) {
+            window.close();
+        }
+    });
+
+    // Monitor for unusual activity, like opening the DevTools via a non-standard way
+    const devtools = function() {
+        let element = new Image();
+        Object.defineProperty(element, 'id', {
+            get: function() {
+                throw 'DevTools is opened';
             }
         });
 
-        // Detect window resizing, another common behavior during screenshotting
-        window.addEventListener('resize', function() {
-            if (window.outerWidth - window.innerWidth > 200 || window.outerHeight - window.innerHeight > 200) {
-                hideSensitiveContent();
-            }
-        });
-
-        // Detect when the user switches to a different tab or minimizes the window
-        window.addEventListener('blur', function() {
-            document.body.style.opacity = 0; // Hide content
-        });
-
-        window.addEventListener('focus', function() {
-            document.body.style.opacity = 1; // Restore content
-        });
-
-        // Monitor for DevTools usage, which can indicate an attempt to inspect the page
-        const detectDevTools = function() {
-            let element = new Image();
-            Object.defineProperty(element, 'id', {
-                get: function() {
-                    hideSensitiveContent(); // Hide content and close if DevTools is opened
-                }
-            });
-
-            setInterval(function() {
-                console.profile();
-                console.profileEnd();
-            }, 1000);
-        };
-
-        try {
-            detectDevTools();
-        } catch (err) {
-            hideSensitiveContent();
-        }
-
-        // Monitor for window resizing for signs of DevTools or screenshot attempts
-        setInterval(() => {
-            if (window.outerWidth !== screen.width || window.outerHeight !== screen.height) {
-                hideSensitiveContent();
+        setInterval(function() {
+            console.profile();
+            console.profileEnd();
+            if (console.clear) {
+                console.clear();
             }
         }, 1000);
-    }
+    };
 
-    // Call the function only when there is an actual interaction related to screenshots
-    window.addEventListener('keydown', detectScreenshotAttempt); // Trigger detection on keypress (e.g., for screenshot shortcuts)
-    window.addEventListener('mousemove', detectScreenshotAttempt); // Trigger detection when there's interaction
-    window.addEventListener('mousedown', detectScreenshotAttempt); // Trigger detection on mouse click
-    window.addEventListener('touchstart', detectScreenshotAttempt); // Trigger on touch devices
+    try {
+        devtools();
+    } catch (err) {
+        alert('DevTools is opened. Please close it!');
+        window.close();
+    }
 });
